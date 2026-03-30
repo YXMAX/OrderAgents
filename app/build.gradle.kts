@@ -3,6 +3,19 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+androidComponents {
+    onVariants { variant ->
+        val customName = "OrderAgent"
+        val versionName = android.defaultConfig.versionName
+
+        variant.outputs.forEach { output ->
+            if (output is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
+                output.outputFileName = "${customName}-v${versionName}.apk"
+            }
+        }
+    }
+}
+
 android {
     namespace = "com.yxmax.orderagents"
     compileSdk {
@@ -11,13 +24,12 @@ android {
         }
     }
 
-
     defaultConfig {
         applicationId = "com.yxmax.orderagents"
         minSdk = 31
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.09"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

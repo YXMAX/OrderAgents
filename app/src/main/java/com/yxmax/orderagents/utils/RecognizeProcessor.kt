@@ -154,15 +154,19 @@ object RecognizeProcessor {
                 }
                 Log.i("OrderAgents","成功在OCR文字中获取品牌: " + filter[0].value)
                 this.recognizeFactory(filter[0].value,order,pack)
+                return
             }
+        }
+        if(toast){
+            sendToast("未识别到有效取餐码")
         }
     }
 
     private fun extractOrder(text: String): String? {
         val result = this.getSpecialOrder(text)
         if(result != null) return result
-        val num = Regex("(?<!\\S)\\d{3,5}\\b").find(text)
-        if(num != null) return num.value
+        val num = Regex("(?:(?<=自提:)|(?<=\\s|[\\u7801]))\\d{2,5}(?=\\s|[\\u53d6]|$)").find(text)
+        if(num != null) return num.value.trim()
         return null
     }
 

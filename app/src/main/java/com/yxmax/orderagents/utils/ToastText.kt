@@ -13,7 +13,7 @@ fun sendToast(@StringRes resId: Int){
         Toast.makeText(
             context,
             context.getString(resId),
-            Toast.LENGTH_LONG
+            Toast.LENGTH_SHORT
         ).show()
     }
 }
@@ -24,7 +24,7 @@ fun sendToast(s: String){
         Toast.makeText(
             context,
             s,
-            Toast.LENGTH_LONG
+            Toast.LENGTH_SHORT
         ).show()
     }
 }
