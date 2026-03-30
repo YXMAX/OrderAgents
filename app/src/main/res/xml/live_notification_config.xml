@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<liveNotification>
+    <title>OrderAgents</title>
+    <description>展示取餐码</description>
+    <icon>@mipmap/ic_launcher</icon>
+    <isService>false</isService>
+</liveNotification>
