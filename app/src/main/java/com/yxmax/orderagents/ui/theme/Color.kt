@@ -42,3 +42,5 @@ val BurgerKing = Color(255,135,48)
 val KFC = Color(229,10,43)
 
 val MollyTea = Color(217, 212, 212, 255)
+
+val LINLEE = Color(53,212,47)

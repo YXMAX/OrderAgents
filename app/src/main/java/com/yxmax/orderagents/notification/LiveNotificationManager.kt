@@ -6,14 +6,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Bundle
-import android.widget.RemoteViews
 import android.util.Log
-import androidx.annotation.ColorRes
+import android.widget.RemoteViews
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
@@ -23,9 +20,10 @@ import com.yxmax.orderagents.R
 import com.yxmax.orderagents.`object`.OrderInfo
 import com.yxmax.orderagents.`object`.OrderRepository
 import com.yxmax.orderagents.receive.CheckButtonReceiver
+import com.yxmax.orderagents.ui.ViewScreenshotActivity
 import com.yxmax.orderagents.utils.RecognizeProcessor
 import com.yxmax.orderagents.utils.sendToast
-import kotlin.jvm.java
+import java.io.File
 
 class LiveNotificationManager() {
 
@@ -50,7 +48,7 @@ class LiveNotificationManager() {
     }
 
     fun showLiveNotificationExample(){
-        showLiveNotification("mcdonald",null,"com.yxmax.orderagents")
+        showLiveNotification(null,"mcdonald",null,"com.yxmax.orderagents")
         sendToast("已发送可点击实况通知")
     }
 
@@ -65,7 +63,7 @@ class LiveNotificationManager() {
         }
     }
 
-    fun showLiveNotification(image: String,order: String?,pack: String) {
+    fun showLiveNotification(uri: Uri?, image: String, order: String?, pack: String) {
 
         val id = OrderRepository.getNextId()
         var result = ""
@@ -107,10 +105,14 @@ class LiveNotificationManager() {
         }
 
         // 创建主通知内容
-        val contentRemoteViews = RemoteViews(context.packageName, R.layout.live_notification_content)
-        contentRemoteViews.setImageViewBitmap(R.id.business_image, img)
-        contentRemoteViews.setTextViewText(R.id.business_title, title)
-        contentRemoteViews.setTextViewText(R.id.business_order, result)
+        val contentRemoteViews = RemoteViews(context.packageName, this.getNotificationContentXML(image))
+        if(image.equals("carplate")){
+            contentRemoteViews.setTextViewText(R.id.car_plate, result)
+        } else {
+            contentRemoteViews.setImageViewBitmap(R.id.business_image, img)
+            contentRemoteViews.setTextViewText(R.id.business_title, title)
+            contentRemoteViews.setTextViewText(R.id.business_order, result)
+        }
 
         val check = Intent(context, CheckButtonReceiver::class.java)
         check.action = "ACTION_CHECK_CLICK"
@@ -122,6 +124,19 @@ class LiveNotificationManager() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         contentRemoteViews.setOnClickPendingIntent(R.id.check_button, checkIntent)
+
+        val screenshot = Intent(context, ViewScreenshotActivity::class.java)
+        screenshot.setAction(Intent.ACTION_VIEW)
+        screenshot.setDataAndType(uri!!, "image/*")
+        screenshot.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        screenshot.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val screenshotIntent = PendingIntent.getActivity(
+            context,
+            0,
+            screenshot,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        contentRemoteViews.setOnClickPendingIntent(R.id.screenshot_button, screenshotIntent)
 
         val requestCode = System.currentTimeMillis().toInt()
 
@@ -167,5 +182,12 @@ class LiveNotificationManager() {
         main_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         main_intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         return main_intent
+    }
+
+    private fun getNotificationContentXML(image: String): Int{
+        if(image.equals("carplate")){
+            return R.layout.car_notification_content
+        }
+        return R.layout.live_notification_content
     }
 }

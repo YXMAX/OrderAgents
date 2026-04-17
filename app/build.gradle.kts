@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.material)
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     implementation("com.hankcs:aho-corasick-double-array-trie:1.2.3")
+    implementation("com.github.bumptech.glide:glide:4.11.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

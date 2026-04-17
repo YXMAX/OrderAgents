@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import com.yxmax.orderagents.GlobalApplication
+import com.yxmax.orderagents.isAppEnabled
 import com.yxmax.orderagents.utils.RecognizeProcessor
 import com.yxmax.orderagents.utils.sendToast
 import kotlinx.coroutines.CoroutineScope
@@ -91,8 +92,10 @@ class OrderAccessibilityService : AccessibilityService() {
         debounceRunnable?.let { handler.removeCallbacks(it) }
 
         debounceRunnable = Runnable {
-            Log.i("OrderAgent","执行OCR识别: " + event.packageName as String)
-            capture(event.packageName as String,false)
+            if(isAppEnabled(event.packageName as String)){
+                Log.i("OrderAgent","执行OCR识别: " + event.packageName as String)
+                capture(event.packageName as String,false)
+            }
         }
 
         handler.postDelayed(debounceRunnable!!, 550)

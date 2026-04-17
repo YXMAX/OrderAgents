@@ -27,6 +27,14 @@ object OrderRepository {
         _cardList.remove(id)
     }
 
+    fun getOrder(id: Int): String?{
+        val get = _cardList.get(id)
+        if(get != null){
+            return get.order
+        }
+        return null
+    }
+
     fun hasOrder(order: String): Boolean{
         return _cardList.any { it.value.order.equals(order) }
     }

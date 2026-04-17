@@ -1,12 +1,16 @@
 package com.yxmax.orderagents.`object`
 
+import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import com.yxmax.orderagents.GlobalApplication
+import java.io.OutputStream
 
 data class FactoryInfo (val translate: String, var color: Color, val image: Bitmap){
 

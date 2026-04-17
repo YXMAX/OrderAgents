@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import com.yxmax.orderagents.AppSettingsActivity
 import com.yxmax.orderagents.GlobalApplication
 import com.yxmax.orderagents.MainActivity
 import com.yxmax.orderagents.SettingsActivity
@@ -12,6 +13,13 @@ import com.yxmax.orderagents.SettingsActivity
 fun openSettingsActivity(){
     val context = GlobalApplication.context
     val intent = Intent(context, SettingsActivity::class.java)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(intent)
+}
+
+fun openAutoRecognizeSettingsActivity(){
+    val context = GlobalApplication.context
+    val intent = Intent(context, AppSettingsActivity::class.java)
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     context.startActivity(intent)
 }

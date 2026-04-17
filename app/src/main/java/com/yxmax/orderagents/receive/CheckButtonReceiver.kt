@@ -7,6 +7,7 @@ import android.util.Log
 import com.yxmax.orderagents.GlobalApplication.Companion.liveNotificationManager
 import com.yxmax.orderagents.MainActivity
 import com.yxmax.orderagents.`object`.OrderRepository
+import com.yxmax.orderagents.utils.RecognizeProcessor
 
 class CheckButtonReceiver : BroadcastReceiver()  {
 
@@ -15,6 +16,10 @@ class CheckButtonReceiver : BroadcastReceiver()  {
             val extraNumber = intent.getIntExtra("notice_id", 0)
             Log.i("","run remove: " + extraNumber)
             if(extraNumber == 0) return
+            val order = OrderRepository.getOrder(extraNumber)
+            if(order != null){
+                RecognizeProcessor.removeScreenshotFromCache(order)
+            }
             OrderRepository.removeCardItem(extraNumber)
             liveNotificationManager.cancelLiveNotification(extraNumber)
         }

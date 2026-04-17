@@ -15,7 +15,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="64dp"
-        android:layout_weight="7"
+        android:layout_weight="5"
         android:layout_marginLeft="8dp"
         android:orientation="vertical">
 
@@ -45,7 +45,23 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:gravity="end|center_vertical"
-        android:layout_weight="3"
+        android:layout_weight="2.25"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/screenshot_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginLeft="8dp"
+            android:background="@drawable/rounded_button"
+            android:src="@drawable/order_image" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:gravity="end|center_vertical"
+        android:layout_weight="2.75"
         android:orientation="vertical">
 
         <ImageButton
