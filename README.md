@@ -4,8 +4,8 @@
 
 ## APP功能图
 
-![截图1](example_screenshot1.png)
-![截图2](example_screenshot2.png)
+![截图1](example_screenshot1.jpg)
+![截图2](example_screenshot2.jpg)
 
 ## 功能
 
