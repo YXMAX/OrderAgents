@@ -13,7 +13,7 @@ import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import com.yxmax.orderagents.GlobalApplication
 import com.yxmax.orderagents.isAppEnabled
-import com.yxmax.orderagents.utils.RecognizeProcessor
+import com.yxmax.orderagents.utils.processor.RecognizeProcessor
 import com.yxmax.orderagents.utils.sendToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +35,8 @@ class OrderAccessibilityService : AccessibilityService() {
     companion object {
         private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
         private var instance: OrderAccessibilityService? = null
+
+        private var isCapturing = false
 
         fun isRunning(): Boolean {
             return instance != null
@@ -64,14 +66,22 @@ class OrderAccessibilityService : AccessibilityService() {
         }
 
         fun requestCapture(){
+            if (isCapturing) {
+                return
+            }
+            isCapturing = true
             serviceScope.launch(Dispatchers.IO) {
-                delay(250)
-                sendToast("正在进行识别..")
-                val packageName = getForegroundPackage()
-                if(packageName == null || packageName.contains("input")){
-                    return@launch
+                try {
+                    delay(750)
+                    sendToast("正在进行识别..")
+                    val packageName = getForegroundPackage()
+                    if(packageName == null || packageName.contains("input")){
+                        return@launch
+                    }
+                    instance!!.capture(packageName,true)
+                } finally {
+                    isCapturing = false
                 }
-                instance!!.capture(packageName,true)
             }
         }
     }

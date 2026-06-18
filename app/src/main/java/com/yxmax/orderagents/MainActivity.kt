@@ -16,10 +16,12 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -53,15 +55,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yxmax.orderagents.GlobalApplication.Companion.liveNotificationManager
 import com.yxmax.orderagents.`object`.OrderInfo
 import com.yxmax.orderagents.`object`.OrderRepository
-import com.yxmax.orderagents.ui.theme.BackgroundLight
 import com.yxmax.orderagents.ui.theme.CardPadding
 import com.yxmax.orderagents.ui.theme.OrderAgentsTheme
+import com.yxmax.orderagents.utils.openScreenshotActivity
 import com.yxmax.orderagents.utils.openSettingsActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -212,7 +215,7 @@ fun InfoCard(info: OrderInfo, onClick: () -> Unit) {
                         // 延时后恢复到原始大小
                         // 使用协程来模拟延时回弹
                         GlobalScope.launch {
-                            delay(100)  // 延时 150 毫秒
+                            delay(150)  // 延时 150 毫秒
                             scale.value = 1f
                         }
                     }
@@ -223,54 +226,195 @@ fun InfoCard(info: OrderInfo, onClick: () -> Unit) {
 
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primary)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                bitmap = info.image.asImageBitmap(),
-                contentDescription = "icon",
-                modifier = Modifier.size(64.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .fillMaxWidth(0.8f)
-            ) {
-                Text(
-                    text = info.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = info.order,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+        if(info.type == 1){
+            if(getNotificationContentType() == 1){
+                StandardMainInfoCard(info,onClick)
+            } else {
+                SimpleMainInfoCard(info,onClick)
             }
-
-            IconButton(
-                modifier = Modifier
-                    .background(
-                        color = Color(208, 208, 208),
-                        shape = MaterialTheme.shapes.medium
-                    ),
-                onClick = {
-                    liveNotificationManager.cancelLiveNotification(info.id)
-                    onClick()
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Check",
-                    tint = Color.Black
-                )
-            }
+        } else {
+            GeneralMainInfoCard(info,onClick)
         }
     }
+}
 
+@Composable
+fun GeneralMainInfoCard(info: OrderInfo, onClick: () -> Unit){
+    Row(
+        modifier = Modifier
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            bitmap = info.image.asImageBitmap(),
+            contentDescription = "icon",
+            modifier = Modifier.size(64.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .weight(0.6f)
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ){
+                Text(
+                    text = info.title,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                IconButton(
+                    modifier = Modifier
+                        .background(
+                            color = Color(208, 208, 208),
+                            shape = MaterialTheme.shapes.medium,
+                        )
+                        .size(width = 56.dp, height = 27.dp),
+                    onClick = {
+                        liveNotificationManager.cancelLiveNotification(info.id)
+                        onClick()
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Check",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            Text(
+                text = info.order,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+    }
+}
+
+@Composable
+fun StandardMainInfoCard(info: OrderInfo, onClick: () -> Unit){
+    Row(
+        modifier = Modifier
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            bitmap = info.image.asImageBitmap(),
+            contentDescription = "icon",
+            modifier = Modifier.size(64.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(start = 8.dp)
+        ) {
+            Text(
+                text = info.title,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Text(
+                text = info.order,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(0.05f))
+
+        IconButton(
+            modifier = Modifier
+                .background(
+                    color = Color(208, 208, 208),
+                    shape = MaterialTheme.shapes.medium
+                ),
+            onClick = {
+                openScreenshotActivity(info.screenshot)
+            }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.order_image),
+                contentDescription = "Screenshot",
+                tint = Color.Black
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(0.05f))
+
+        IconButton(
+            modifier = Modifier
+                .background(
+                    color = Color(208, 208, 208),
+                    shape = MaterialTheme.shapes.medium
+                ),
+            onClick = {
+                liveNotificationManager.cancelLiveNotification(info.id)
+                onClick()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Check",
+                tint = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+fun SimpleMainInfoCard(info: OrderInfo, onClick: () -> Unit){
+    Row(
+        modifier = Modifier
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            bitmap = info.image.asImageBitmap(),
+            contentDescription = "icon",
+            modifier = Modifier.size(64.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .weight(0.6f)
+        ) {
+            Text(
+                text = info.title,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Text(
+                text = info.order,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+
+        IconButton(
+            modifier = Modifier
+                .background(
+                    color = Color(208, 208, 208),
+                    shape = MaterialTheme.shapes.medium
+                ),
+            onClick = {
+                liveNotificationManager.cancelLiveNotification(info.id)
+                onClick()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Check",
+                tint = Color.Black
+            )
+        }
+    }
 }

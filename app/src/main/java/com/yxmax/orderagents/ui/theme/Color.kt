@@ -44,3 +44,19 @@ val KFC = Color(229,10,43)
 val MollyTea = Color(217, 212, 212, 255)
 
 val LINLEE = Color(53,212,47)
+
+val Carplate = Color(116, 238, 147, 255)
+
+val CaiNiao = Color(0,110,255)
+
+val DiDi = Color(255,100,0)
+
+val HuaXZ = Color(229,6,173)
+
+val Haluo = Color(0,141,255)
+
+val TuXi = Color(57,81,196)
+
+val FengChao = Color(255,206,68)
+
+val MaMa = Color(255,123,36)
