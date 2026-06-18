@@ -2,6 +2,11 @@
 
 包名（`applicationId`）：`com.yxmax.orderagents`
 
+## APP功能图
+
+![截图1](example_screenshot1.jpg)
+![截图2](example_screenshot2.jpg)
+
 ## 功能
 
 1. 支持以下应用的自动OCR识别:
