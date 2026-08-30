@@ -7,7 +7,6 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
-import com.hankcs.algorithm.AhoCorasickDoubleArrayTrie
 import com.yxmax.orderagents.GlobalApplication
 import com.yxmax.orderagents.R
 import com.yxmax.orderagents.`object`.FactoryInfo
@@ -36,6 +35,7 @@ import com.yxmax.orderagents.ui.theme.TuXi
 import com.yxmax.orderagents.ui.theme.Yidd
 import com.yxmax.orderagents.utils.order.CarplateOrder
 import com.yxmax.orderagents.utils.order.DeliveryOrder
+import com.yxmax.orderagents.utils.order.OrderKeyword
 import com.yxmax.orderagents.utils.order.RestaurantOrder
 import com.yxmax.orderagents.utils.sendToast
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -44,69 +44,8 @@ import kotlin.coroutines.resumeWithException
 
 object RecognizeProcessor {
 
-    private val filter_list by lazy {
-        setOf("0","1","2","end")
-    }
-
     private val ocrRecognizer by lazy {
         TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
-    }
-
-    private val orderRecognizer by lazy{
-        val map = mapOf(
-            "订单详情" to "0",
-            "取餐码" to "0",
-            "取餐号" to "0",
-            "取单号" to "0",
-            "取单码" to "0",
-            "订单号" to "0",
-            "取茶码" to "0",
-            "取荼码" to "0",
-            "司机正在赶来" to "1",
-            "等待车主到达" to "1",
-            "等待车主出发" to "1",
-            "取件码" to "2",
-            "取件" to "2",
-            "订单已完成" to "end",
-            "订单己完成" to "end",
-            "茶百道" to "chapanda",
-            "熊猫币" to "chapanda",
-            "茉莉奶白" to "mollytea",
-            "Molly " to "mollytea",
-            "MOLLY " to "mollytea",
-            "蜜雪冰城" to "mixue",
-            "餐码给好友" to "luckin",
-            "霸王茶姬" to "chaji",
-            "CoCo都可" to "coco",
-            "KFC" to "kfc",
-            "塔斯汀" to "tasting",
-            "喜茶" to "xicha",
-            "瑞幸咖啡" to "luckin",
-            "库迪咖啡" to "cotti",
-            "古茗" to "guming",
-            "Manner" to "manner",
-            "爷爷不泡茶" to "noyetea",
-            "茶理宜世" to "chaliys",
-            "沪上阿姨" to "hsay",
-            "汉堡王" to "burgerking",
-            "制茶中" to "xicha",
-            "取茶号" to "guming",
-            "麦当劳" to "mcdonald",
-            "取實号)" to "tasting",
-            "取餐号)" to "tasting",
-            "取素号)" to "tasting",
-            "参与塔塔" to "tasting",
-            "LINLEE" to "linlee",
-            "菜鸟驿站" to "cainiao",
-            "菜乌驿站" to "cainiao",
-            "兔喜生活" to "tuxi",
-            "免喜生活" to "tuxi",
-            "妈妈驿站" to "mama",
-            "丰巢" to "fengchao"
-        )
-        val trie = AhoCorasickDoubleArrayTrie<String>()
-        trie.build(map)
-        trie
     }
 
     // 1:取餐码 2:车牌号 3:取件码
@@ -159,11 +98,13 @@ object RecognizeProcessor {
     }
 
     suspend fun recognizeText(bitmap: Bitmap, pack: String, toast: Boolean){
-        val text = this.processByOCR(bitmap).text.trimIndent()
+        val cropped = cropScreenshot(bitmap)
+        val vision = this.processByOCR(cropped)
+        val text = vision.text.trimIndent()
         Log.i("OrderAgents","前台应用: " + pack)
         Log.i("OrderAgents","文字识别结果: " + text)
 
-        if(!this.processHitText(bitmap, pack, text)){
+        if(!this.processHitText(cropped, pack, text, vision)){
             this.sendFailedToast(toast)
             return
         }
@@ -175,53 +116,33 @@ object RecognizeProcessor {
         }
     }
 
-    private fun getHitFactory(set: MutableSet<String>): String?{
-        set.removeAll { it in filter_list }
-        return set.firstOrNull()
-    }
-
-    private fun processHitText(bitmapOriginal: Bitmap,pack: String,text: String): Boolean{
-        val list = orderRecognizer.parseText(text).map{it.value}.toMutableSet()
-        if(list.isEmpty()) return false
-        when{
-            "0" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 取餐码")
-                if("end" in list){
+    private fun processHitText(bitmapCropped: Bitmap,pack: String,text: String,vision: Text): Boolean{
+        val hit = OrderKeyword.detect(text) ?: return false
+        when(hit.stage){
+            OrderKeyword.STAGE_RESTAURANT -> {
+                Log.i("OrderAgents","进入识别第一阶段: 取餐码 (品牌 " + hit.brand + " 锚点 " + hit.anchored + ")")
+                // 「订单已完成」不代表取不到码 —— 喜茶/霸王茶姬完成后仍然显示取餐号,
+                // 所以先尝试提取, 真的没有码时才提示已完成
+                if(RestaurantOrder.createNotification(vision,pack,hit.brand,bitmapCropped,hit.anchored)){
+                    return true
+                }
+                if(hit.finished){
                     Log.i("OrderAgents","该订单已完成")
                     sendToast("该订单已完成")
                     return true
                 }
-                return RestaurantOrder.createNotification(text,pack,this.getHitFactory(list),bitmapOriginal)
+                return false
             }
 
-            "1" in list -> {
+            OrderKeyword.STAGE_CARPLATE -> {
                 Log.i("OrderAgents","进入识别第一阶段: 车牌号")
                 return CarplateOrder.createNotification(text,pack)
             }
 
-            "cainiao" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 菜鸟驿站取件码")
-                return DeliveryOrder.createNotification(text,pack,"cainiao")
-            }
-
-            "tuxi" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 兔喜取件码")
-                return DeliveryOrder.createNotification(text,pack,"tuxi")
-            }
-
-            "fengchao" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 丰巢取件码")
-                return DeliveryOrder.createNotification(text,pack,"fengchao")
-            }
-
-            "mama" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 妈妈驿站取件码")
-                return DeliveryOrder.createNotification(text,pack,"mama")
-            }
-
-            "2" in list -> {
-                Log.i("OrderAgents","进入识别第一阶段: 标准取件码")
-                return DeliveryOrder.createNotification(text,pack,"default")
+            OrderKeyword.STAGE_DELIVERY -> {
+                val factory = hit.brand ?: "default"
+                Log.i("OrderAgents","进入识别第一阶段: 取件码 (" + factory + ")")
+                return DeliveryOrder.createNotification(text,pack,factory)
             }
 
             else -> return false
@@ -231,9 +152,11 @@ object RecognizeProcessor {
     fun cropScreenshot(bitmap: Bitmap): Bitmap {
         return Bitmap.createBitmap(bitmap, 0, 125, bitmap.width,bitmap.height - 275)
     }
+
+    /** 传入的必须是已裁剪过的图, 保证 boundingBox 与该图坐标系一致 */
     private suspend fun processByOCR(bitmap: Bitmap): Text =
         suspendCancellableCoroutine { continuation ->
-            val image = InputImage.fromBitmap(cropScreenshot(bitmap), 0)
+            val image = InputImage.fromBitmap(bitmap, 0)
             ocrRecognizer.process(image)
                 .addOnSuccessListener { continuation.resume(it) }
                 .addOnFailureListener { continuation.resumeWithException(it) }

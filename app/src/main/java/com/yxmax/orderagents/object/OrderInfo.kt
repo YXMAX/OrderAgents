@@ -14,7 +14,9 @@ data class OrderInfo (
     val title: String,
     val order: String,
     val id: Int,
-    val type: Int
+    val type: Int,
+    /** 副标题, 目前用于车辆型号(如 长安逸动新能源); 无则为 null */
+    val subtitle: String? = null
 )
 
 object OrderRepository {

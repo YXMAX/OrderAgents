@@ -55,7 +55,10 @@ class LiveNotificationManager() {
         sendToast("已发送可点击实况通知")
     }
 
-    fun createNotification(uri: Uri?, image: String, order: String?, pack: String,type: Int){
+    /**
+     * @param subtitle 副标题, 目前用于车辆型号(如 长安逸动新能源); 无则传 null
+     */
+    fun createNotification(uri: Uri?, image: String, order: String?, pack: String,type: Int,subtitle: String? = null){
         if(order == null) return
         if(OrderRepository.hasOrder(order)) return
         if(image == "default"){
@@ -65,15 +68,15 @@ class LiveNotificationManager() {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA){
             if(Build.MANUFACTURER.equals("meizu")){
-                this.showFlymeLiveNotification(uri,image,order,pack,type)
+                this.showFlymeLiveNotification(uri,image,order,pack,type,subtitle)
             } else {
-                this.showAndroidLiveUpdates(uri,image,order,pack,type)
+                this.showAndroidLiveUpdates(uri,image,order,pack,type,subtitle)
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
-    fun showAndroidLiveUpdates(uri: Uri?, image: String, order: String, pack: String,type: Int){
+    fun showAndroidLiveUpdates(uri: Uri?, image: String, order: String, pack: String,type: Int,subtitle: String? = null){
 
         val factoryInfo = RecognizeProcessor.getFactory(image,pack)
         val title = factoryInfo.translate
@@ -86,7 +89,8 @@ class LiveNotificationManager() {
                 title,
                 order,
                 id,
-                type
+                type,
+                subtitle
             )
         )
 
@@ -94,7 +98,7 @@ class LiveNotificationManager() {
             .setSmallIcon(R.drawable.shopping_cart)
             .setLargeIcon(img)
             .setContentTitle(title)
-            .setContentText(order)
+            .setContentText(if(subtitle == null) order else order + " · " + subtitle)
             .setContentIntent(this.getOpenedIntent(pack))
             .setOngoing(true)
             .setShortCriticalText(order)
@@ -113,7 +117,7 @@ class LiveNotificationManager() {
         notificationManager.notify(id,builder.build())
     }
 
-    fun showFlymeLiveNotification(uri: Uri?, image: String, order: String, pack: String,contentType: Int) {
+    fun showFlymeLiveNotification(uri: Uri?, image: String, order: String, pack: String,contentType: Int,subtitle: String? = null) {
 
         val id = OrderRepository.getNextId()
         val factoryInfo = RecognizeProcessor.getFactory(image,pack)
@@ -132,7 +136,8 @@ class LiveNotificationManager() {
                 title,
                 order,
                 id,
-                type
+                type,
+                subtitle
             )
         )
 
@@ -163,7 +168,7 @@ class LiveNotificationManager() {
         // 创建主通知内容
         val contentRemoteViews = RemoteViews(context.packageName, notificationContent.getContentLayout(type))
         contentRemoteViews.setImageViewBitmap(R.id.business_image, img)
-        contentRemoteViews.setTextViewText(R.id.business_title, this.resetContentTitle(title,order,type))
+        contentRemoteViews.setTextViewText(R.id.business_title, this.resetContentTitle(title,order,type,subtitle))
         contentRemoteViews.setTextViewText(R.id.business_order, this.resetContentOrder(order,type))
 
         contentRemoteViews.setOnClickPendingIntent(R.id.check_button, this.getCompletedIntent(id))
@@ -194,8 +199,13 @@ class LiveNotificationManager() {
         }
     }
 
-    private fun resetContentTitle(title: String,order: String,type: Int): String{
+    private fun resetContentTitle(title: String,order: String,type: Int,subtitle: String? = null): String{
         when(type){
+            2 -> {
+                // 车牌: 标题带上车辆型号, 如「滴滴出行 · 长安逸动新能源」
+                if(subtitle != null) return subtitle
+                return title
+            }
             3 -> {
                 if(order.contains("号柜")){
                     return title + " · " + order.substring(0,3)
