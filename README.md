@@ -2,10 +2,11 @@
 
 包名（`applicationId`）：`com.yxmax.orderagents`
 
+- 仿照一些国内定制OS（ColorOS,HyperOS,MagicOS,OriginOS）的系统级AI助手
+- 通过识别屏幕内容 获取如快递取件码 取餐码 车牌号等的数据 便利用户可以每时每刻进行查看
+
 ## APP功能图
-![截图0](example_screenshot0.jpg)
-![截图1](example_screenshot1.jpg)
-![截图2](example_screenshot2.jpg)
+![截图0](app_example.jpg)
 
 ## 功能
 
